@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Daily Progress</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #111;
+      color: #eee;
+    }
+
+    .app {
+      max-width: 600px;
+      margin: auto;
+      padding: 20px;
+    }
+
+    h1 {
+      margin-bottom: 5px;
+    }
+
+    .date {
+      color: #999;
+      margin-bottom: 20px;
+    }
+
+    .mode-buttons {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    button {
+      border: none;
+      border-radius: 10px;
+      padding: 12px 16px;
+      cursor: pointer;
+      background: #292929;
+      color: white;
+    }
+
+    button.active {
+      background: #555;
+    }
+
+    .card {
+      background: #1c1c1c;
+      border-radius: 15px;
+      padding: 18px;
+      margin-bottom: 15px;
+    }
+
+    .habit {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 13px 0;
+      border-bottom: 1px solid #303030;
+    }
+
+    .habit:last-child {
+      border-bottom: none;
+    }
+
+    input[type="checkbox"] {
+      width: 20px;
+      height: 20px;
+    }
+
+    input[type="number"],
+    input[type="text"] {
+      width: 100%;
+      padding: 12px;
+      margin-top: 8px;
+      border-radius: 8px;
+      border: 1px solid #444;
+      background: #111;
+      color: white;
+    }
+
+    .save {
+      width: 100%;
+      background: #eee;
+      color: #111;
+      font-size: 16px;
+      margin-top: 10px;
+    }
+
+    .message {
+      text-align: center;
+      margin-top: 15px;
+      color: #aaa;
+    }
+
+    .nav {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    .nav button {
+      flex: 1;
+    }
+
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="app">
+
+  <h1>Daily Progress</h1>
+  <div class="date" id="date"></div>
+
+  <!-- MODE -->
+  <div class="mode-buttons">
+    <button id="normalBtn" class="active" onclick="setMode('normal')">
+      Normal Mode
+    </button>
+
+    <button id="recoveryBtn" onclick="setMode('recovery')">
+      Recovery Mode
+    </button>
+  </div>
+
+  <!-- DAILY CHECK-IN -->
+  <div id="dailyPage">
+
+    <div class="card">
+      <h2>Daily Check-in</h2>
+
+      <div class="habit">
+        <span>Prayer</span>
+        <input type="checkbox" id="prayer">
+      </div>
+
+      <div class="habit">
+        <span>Exercise</span>
+        <input type="checkbox" id="exercise">
+      </div>
+
+      <div class="habit">
+        <span>No Social Media</span>
+        <input type="checkbox" id="social">
+      </div>
+
+      <div class="habit">
+        <span>No Porn</span>
+        <input type="checkbox" id="porn">
+      </div>
+
+      <div class="habit">
+        <span>Goal / Smaller Goal</span>
+        <input type="checkbox" id="goal">
+      </div>
+
+      <div class="habit">
+        <span>Chess</span>
+        <input type="checkbox" id="chess">
+      </div>
+
+      <div class="habit">
+        <span>English Practice</span>
+        <input type="checkbox" id="english">
+      </div>
+
+      <div class="habit">
+        <span>Arabic Study</span>
+        <input type="checkbox" id="arabic">
+      </div>
+
+      <div class="habit">
+        <span>Reading</span>
+        <input type="checkbox" id="reading">
+      </div>
+
+    </div>
+
+    <!-- SLEEP -->
+    <div class="card">
+      <h2>Sleep</h2>
+
+      <label>Sleep hours</label>
+      <input
+        type="number"
+        id="sleep"
+        min="0"
+        max="24"
+        step="0.5"
+        placeholder="Example: 8"
+      >
+    </div>
+
+    <!-- READING -->
+    <div class="card">
+      <h2>Reading Note</h2>
+
+      <input
+        type="text"
+        id="readingNote"
+        placeholder="One sentence about what you read..."
+      >
+    </div>
+
+    <button class="save" onclick="saveDay()">
+      Save Today's Progress
+    </button>
+
+    <div class="message" id="message"></div>
+
+  </div>
+
+  <!-- PROGRESS -->
+  <div id="progressPage" class="hidden">
+
+    <div class="card">
+      <h2>Progress</h2>
+
+      <p>Days recorded: <strong id="daysRecorded">0</strong></p>
+
+      <p>Current streak: <strong id="streak">0</strong></p>
+
+      <p>Average sleep: <strong id="averageSleep">0</strong> hours</p>
+    </div>
+
+    <div class="card">
+      <h2>History</h2>
+      <div id="history"></div>
+    </div>
+
+  </div>
+
+  <!-- NAVIGATION -->
+  <div class="nav">
+    <button onclick="showPage('daily')">
+      Today
+    </button>
+
+    <button onclick="showPage('progress')">
+      Progress
+    </button>
+  </div>
+
+</div>
+
+<script>
+
+const habits = [
+  "prayer",
+  "exercise",
+  "social",
+  "porn",
+  "goal",
+  "chess",
+  "english",
+  "arabic",
+  "reading"
+];
+
+let currentMode = "normal";
+
+document.getElementById("date").innerText =
+  new Date().toLocaleDateString(undefined, {
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric"
+  });
+
+function setMode(mode) {
+
+  currentMode = mode;
+
+  document.getElementById("normalBtn")
+    .classList.toggle("active", mode === "normal");
+
+  document.getElementById("recoveryBtn")
+    .classList.toggle("active", mode === "recovery");
+
+  if (mode === "recovery") {
+
+    document.querySelector("#exercise")
+      .parentElement
+      .querySelector("span").innerText = "Exercise — minimum 5 min";
+
+    document.querySelector("#prayer")
+      .parentElement
+      .querySelector("span").innerText = "Prayer — minimum 10 min";
+
+  } else {
+
+    document.querySelector("#exercise")
+      .parentElement
+      .querySelector("span").innerText = "Exercise";
+
+    document.querySelector("#prayer")
+      .parentElement
+      .querySelector("span").innerText = "Prayer";
+  }
+}
+
+function saveDay() {
+
+  const today = new Date().toISOString().split("T")[0];
+
+  const data = {
+    date: today,
+    mode: currentMode,
+    sleep: Number(document.getElementById("sleep").value) || 0,
+    readingNote: document.getElementById("readingNote").value
+  };
+
+  habits.forEach(habit => {
+    data[habit] = document.getElementById(habit).checked;
+  });
+
+  let history =
+    JSON.parse(localStorage.getItem("dailyProgress")) || [];
+
+  const existing = history.findIndex(day => day.date === today);
+
+  if (existing >= 0) {
+    history[existing] = data;
+  } else {
+    history.push(data);
+  }
+
+  localStorage.setItem(
+    "dailyProgress",
+    JSON.stringify(history)
+  );
+
+  document.getElementById("message").innerText =
+    "Today's progress saved.";
+
+  updateProgress();
+}
+
+function updateProgress() {
+
+  const history =
+    JSON.parse(localStorage.getItem("dailyProgress")) || [];
+
+  document.getElementById("daysRecorded").innerText =
+    history.length;
+
+  if (history.length === 0) {
+    document.getElementById("streak").innerText = "0";
+    document.getElementById("averageSleep").innerText = "0";
+    document.getElementById("history").innerHTML =
+      "<p>No days recorded yet.</p>";
+    return;
+  }
+
+  let totalSleep = history.reduce(
+    (sum, day) => sum + (Number(day.sleep) || 0),
+    0
+  );
+
+  document.getElementById("averageSleep").innerText =
+    (totalSleep / history.length).toFixed(1);
+
+  let streak = 0;
+
+  for (let i = history.length - 1; i >= 0; i--) {
+
+    const day = history[i];
+
+    if (
+      day.prayer ||
+      day.exercise ||
+      day.goal ||
+      day.english ||
+      day.chess
+    ) {
+      streak++;
+    } else {
+      break;
+    }
+  }
+
+  document.getElementById("streak").innerText = streak;
+
+  const historyHTML = history
+    .slice()
+    .reverse()
+    .map(day => `
+      <div class="habit">
+        <span>${day.date}</span>
+        <span>${day.mode}</span>
+      </div>
+    `)
+    .join("");
+
+  document.getElementById("history").innerHTML =
+    historyHTML;
+}
+
+function showPage(page) {
+
+  if (page === "daily") {
+    document.getElementById("dailyPage")
+      .classList.remove("hidden");
+
+    document.getElementById("progressPage")
+      .classList.add("hidden");
+
+  } else {
+
+    document.getElementById("dailyPage")
+      .classList.add("hidden");
+
+    document.getElementById("progressPage")
+      .classList.remove("hidden");
+
+    updateProgress();
+  }
+}
+
+updateProgress();
+
+</script>
+
+</body>
+</html>
